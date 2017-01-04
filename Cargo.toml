@@ -10,6 +10,9 @@ authors = ["Richard Newman <rnewman@twinql.com>", "Nicholas Alexander <nalexande
 [dependencies.datomish_query_parser]
   path = "query-parser"
 
+[dependencies.datomish_query]
+  path = "query"
+
 [dev-dependencies]
 [dev-dependencies.datomish_cli]
   path = "cli"

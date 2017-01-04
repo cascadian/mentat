@@ -9,6 +9,7 @@
 // specific language governing permissions and limitations under the License.
 
 extern crate datomish_query_parser;
+extern crate datomish_query;
 extern crate edn;
 
 pub mod ident;
