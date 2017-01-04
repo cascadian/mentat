@@ -9,8 +9,8 @@
 // specific language governing permissions and limitations under the License.
 
 extern crate datomish_query_parser;
+extern crate edn;
 
-pub mod keyword;
 pub mod ident;
 
 pub fn get_name() -> String {
@@ -29,10 +29,16 @@ pub fn add_two(a: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use edn::keyword::Keyword;
 
     #[test]
     fn it_works() {
         assert_eq!(4, add_two(2));
+    }
+
+    #[test]
+    fn can_import_edn() {
+        assert_eq!("foo", Keyword::new("foo").name);
     }
 
     #[test]
