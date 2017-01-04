@@ -1,5 +1,5 @@
 [package]
-name = "datomish-cli"
+name = "datomish_cli"
 version = "0.0.1"
 
 [dependencies]

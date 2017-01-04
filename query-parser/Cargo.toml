@@ -1,7 +1,10 @@
 [package]
-name = "datomish-query-parser"
+name = "datomish_query_parser"
 version = "0.0.1"
 
 [dependencies]
 [dependencies.edn]
   path = "../edn"
+
+[dependencies.datomish_query]
+  path = "../query"
