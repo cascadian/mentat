@@ -15,6 +15,7 @@
       [cljs.core.async.macros :as a :refer [go]]))
   (:require
    [datomish.db :as db]
+   [datomish.pull-api :as dp]
    [datomish.db-factory :as db-factory]
    [datomish.sqlite :as sqlite]
    [datomish.transact :as transact]
@@ -51,6 +52,16 @@
 
 (def ident db/ident)
 
-(def <q db/<?q)
+(defn <q
+  ([db find]
+    (<q db find {}))
+  ([db find {:keys [pull-fn] :as options}]
+    (db/<?q db find (if pull-fn
+                      options
+                      (assoc options :pull-fn dp/<pull)))))
+
+(def <pull dp/<pull)
+
+(def <pull-many dp/pull-many)
 
 (def schema db/schema)
