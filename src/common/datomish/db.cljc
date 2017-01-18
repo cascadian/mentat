@@ -24,6 +24,7 @@
     #?(:cljs :refer-macros :clj :refer) [raise raise-str cond-let]]
    [datomish.schema :as ds]
    [datomish.sqlite :as s]
+   [datomish.pull-query :as pq]
    [datomish.sqlite-schema :as sqlite-schema]
    [datomish.tufte-stub :as tufte
     #?(:cljs :refer-macros :clj :refer) [p]]
@@ -1009,10 +1010,10 @@
   ([db find]
    (<?q db find {}))
   ([db find options]
-   (let [unexpected (seq (clojure.set/difference (set (keys options)) #{:limit :order-by :inputs}))]
+   (let [unexpected (seq (clojure.set/difference (set (keys options)) #{:pull-fn :limit :order-by :inputs}))]
      (when unexpected
        (raise "Unexpected options: " unexpected {:bad-options unexpected})))
-   (let [{:keys [limit order-by inputs]} options
+   (let [{:keys [pull-fn limit order-by inputs]} options
          parsed (query/parse find)
          context (-> db
                      query-context
@@ -1038,7 +1039,8 @@
 
      ;; If we only want the first result, great!
      ;; Otherwise, reduce it down.
-     (if first-only
-       chan
-       (a/reduce (partial reduce-error-pair conj) [[] nil]
-                 chan)))))
+     (let [res-chan (if first-only
+                      chan
+                      (a/reduce (partial reduce-error-pair conj) [[] nil]
+                                chan))]
+       (pq/pull-in-query db pull-fn context res-chan)))))

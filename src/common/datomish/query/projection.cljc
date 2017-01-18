@@ -24,7 +24,7 @@
                 Placeholder
                 PlainSymbol
                 Variable
-                ]])]
+                Pull]])]
    )
   #?(:clj (:import
              [datascript.parser
@@ -36,6 +36,7 @@
               Placeholder
               PlainSymbol
               Variable
+              Pull
               ])))
 
 (defn lookup-variable [cc variable]
@@ -77,8 +78,9 @@
     (:symbol (first (:args elem)))))
 
 (defn- variable->var [elem]
-  (when (instance? Variable elem)
-    (:symbol elem)))
+  (cond
+    (instance? Variable elem) (:symbol elem)
+    (instance? Pull elem) (get-in elem [:variable :symbol])))
 
 (defn- aggregate->projection [elem context lookup-fn]
   (when (instance? Aggregate elem)
@@ -234,8 +236,8 @@
   {:pre [(map? extracted-types)
          (map? known-types)]}
   (letfn [(variable->projector [elem known-types extracted-types tag-decoder]
-          (when (instance? Variable elem)
-            (let [var (:symbol elem)
+          (when (or (instance? Variable elem) (instance? Pull elem))
+            (let [var (or (:symbol elem) (get-in elem [:variable :symbol]))
                   projected-var (util/var->sql-var var)]
 
               (if-let [type (get known-types var)]
