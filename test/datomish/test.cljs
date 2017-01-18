@@ -15,6 +15,7 @@
    datomish.util-test
    datomish.test.transforms
    datomish.test.query
+   datomish.test.pull
    datomish.test-macros-test
    ))
 
@@ -32,4 +33,5 @@
   'datomish.util-test
   'datomish.test.transforms
   'datomish.test.query
-  'datomish.test-macros-test)
+  'datomish.test-macros-test
+  'datomish.test.pull)
