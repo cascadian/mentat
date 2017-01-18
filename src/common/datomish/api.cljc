@@ -60,8 +60,8 @@
                       options
                       (assoc options :pull-fn dp/<pull)))))
 
-(defn <pull dp/<pull)
+(def <pull dp/<pull)
 
-(defn <pull-many dp/pull-many)
+(def <pull-many dp/pull-many)
 
 (def schema db/schema)

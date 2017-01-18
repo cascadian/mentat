@@ -169,7 +169,9 @@
   (go-pair
     (let [[attr-key opts] spec]
       (if (= :db/id attr-key)
-        (if (not-empty (ddb/<?q db :eavt [eid]))
+        (if (not-empty (<? (ddb/<?q db '[:find [?e]
+                                         :in $ ?e
+                                         :where [?e ?a]] {:inputs {:e eid}})))
           (conj (rest frames)
                 (update (first frames) :kvps assoc! :db/id eid))
           frames)
@@ -219,7 +221,6 @@
           opts          (-> frame
                             (get-in [:pattern :attrs])
                             (get attr {}))]
-      (println "datoms-by-attr: " datoms-by-attr)
       (pull-attr-datoms db attr attr (:eid frame) true datoms opts
                         (conj frames (update frame :datoms rest))))
     (if-let [rattrs (->> (get-in frame [:pattern :attrs])
