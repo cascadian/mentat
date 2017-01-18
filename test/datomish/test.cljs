@@ -19,7 +19,7 @@
    datomish.test-macros-test
    ))
 
-(doo-tests
+#_ (doo-tests
   'datomish.schema-changes-test
   'datomish.schema-management-test
   'datomish.places.importer-test
@@ -34,4 +34,7 @@
   'datomish.test.transforms
   'datomish.test.query
   'datomish.test-macros-test
+  'datomish.test.pull)
+
+(doo-tests
   'datomish.test.pull)

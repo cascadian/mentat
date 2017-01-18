@@ -24,38 +24,17 @@
     #?(:cljs :refer-macros :clj :refer) [raise raise-str cond-let]]
    [datomish.schema :as ds]
    [datomish.sqlite :as s]
+   [datomish.pull-query :as pq]
    [datomish.sqlite-schema :as sqlite-schema]
    [datomish.tufte-stub :as tufte
     #?(:cljs :refer-macros :clj :refer) [p]]
    #?@(:clj [[datomish.pair-chan :refer [go-pair <?]]
              [clojure.core.async :as a :refer [chan go <! >!]]])
    #?@(:cljs [[datomish.pair-chan]
-              [cljs.core.async :as a :refer [chan <! >!]]])
-   [datascript.parser :as dp
-    #?@(:cljs [:refer
-               [Aggregate
-                Constant
-                DefaultSrc
-                FindRel FindColl FindTuple FindScalar
-                Pattern
-                Placeholder
-                PlainSymbol
-                Variable
-                Pull]])])
+              [cljs.core.async :as a :refer [chan <! >!]]]))
   #?(:clj
      (:import
-      [datomish.datom Datom]
-      [datascript.parser
-       Aggregate
-       Constant
-       DefaultSrc
-       FindRel FindColl FindTuple FindScalar
-       Pattern
-       Placeholder
-       PlainSymbol
-       Variable
-       Pull
-       ])))
+      [datomish.datom Datom])))
 
 #?(:clj
    ;; From https://stuartsierra.com/2015/05/27/clojure-uncaught-exceptions
@@ -1063,43 +1042,5 @@
      (let [res-chan (if first-only
                       chan
                       (a/reduce (partial reduce-error-pair conj) [[] nil]
-                                chan))
-           pull-elements (filter some? (map-indexed (fn [idx elem] (when (instance? Pull elem) [idx elem])) (:elements context)))]
-       (if-let [pulls (seq pull-elements)]
-         (go-pair
-           (let [find-spec (:find-spec context)
-                 res (<? res-chan)]
-             (cond
-               (nil? res) res
-               (instance? FindScalar find-spec)
-               (<? (pull-fn db (get-in (second (first pulls)) [:pattern :value]) res))
-               (empty? res) res
-               (instance? FindColl find-spec)
-               (let [query-result (atom res)
-                     count (atom 0)
-                     pull-elem (second (first pulls))]
-                 (doseq [eid res]
-                   (let [pull-result (<? (pull-fn db (get-in pull-elem [:pattern :value]) eid))]
-                     (swap! query-result assoc @count pull-result)
-                     (swap! count inc)))
-                 @query-result)
-               (instance? FindTuple find-spec)
-               (let [query-result (atom (vec res))]
-                 (doseq [[idx pull-elem] pulls]
-                   (let [eid (nth res idx)
-                         pull-result (<? (pull-fn db (get-in pull-elem [:pattern :value]) eid))]
-                     (swap! query-result assoc idx pull-result)))
-                 @query-result)
-               (instance? FindRel find-spec)
-               (let [query-result (atom res)
-                     count (atom 0)]
-                 (doseq [tuple res]
-                   (doseq [[idx pull-elem] pulls]
-                     (let [eid (nth tuple idx)
-                           pull-result (<? (pull-fn db (get-in pull-elem [:pattern :value]) eid))
-                           tuple* (assoc (vec tuple) idx pull-result)]
-                       (swap! query-result assoc @count tuple*)
-                       (swap! count inc))))
-                 @query-result)
-               :else res)))
-         res-chan)))))
+                                chan))]
+       (pq/pull-in-query db pull-fn context res-chan)))))
