@@ -1,3 +1,5 @@
+;; Purloined from DataScript. Adapted for async.
+
 (ns datomish.pull-api
   #?(:cljs (:require-macros [cljs.core.async.macros :refer [go]]
              [datomish.pair-chan :refer [go-pair <?]]))
