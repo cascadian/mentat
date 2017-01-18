@@ -30,23 +30,23 @@
     :db/cardinality        :db.cardinality/one
     :db/valueType          :db.type/long
     :db/unique             :db.unique/identity
-    :db/ident              :pull/id}
+    :db/ident              :foo/id}
    {:db/id                 (d/id-literal :db.part/user)
     :db.install/_attribute :db.part/db
     :db/cardinality        :db.cardinality/one
     :db/valueType          :db.type/string
-    :db/ident              :pull/str}
+    :db/ident              :foo/str}
    {:db/id                 (d/id-literal :db.part/user)
     :db.install/_attribute :db.part/db
     :db/cardinality        :db.cardinality/many
     :db/valueType          :db.type/ref
-    :db/ident              :pull/refs}
+    :db/ident              :foo/refs}
    {:db/id                 (d/id-literal :db.part/user)
     :db.install/_attribute :db.part/db
     :db/cardinality        :db.cardinality/one
     :db/valueType          :db.type/ref
     :db/isComponent        true
-    :db/ident              :pull/component}])
+    :db/ident              :foo/component}])
 
 (deftest-db test-pull-api conn
             (let [attrs (<? (<initialize-with-schema conn schema))
@@ -57,38 +57,38 @@
                   tempid-4 (tempid -4)
                   tx-data (<? (d/<transact! conn
                                             [{:db/id    tempid-2
-                                              :pull/id  2
-                                              :pull/str "2"}
+                                              :foo/id  2
+                                              :foo/str "2"}
                                              {:db/id    tempid-3
-                                              :pull/id  3
-                                              :pull/str "3"}
+                                              :foo/id  3
+                                              :foo/str "3"}
                                              {:db/id    tempid-4
-                                              :pull/id  4
-                                              :pull/str "4"}
+                                              :foo/id  4
+                                              :foo/str "4"}
                                              {:db/id          tempid-1
-                                              :pull/id        1
-                                              :pull/str       "1"
-                                              :pull/component tempid-2
-                                              :pull/refs      [tempid-3
+                                              :foo/id        1
+                                              :foo/str       "1"
+                                              :foo/component tempid-2
+                                              :foo/refs      [tempid-3
                                                                tempid-4]}]))
                   tempids (:tempids tx-data)
-                  eid #(get tempids %)]
+                  dbid #(get tempids %)]
               (testing "pull wildcard"
-                (is (= {:db/id (eid tempid-1)
-                        :pull/id 1
-                        :pull/str "1"
-                        :pull/component {:db/id (eid tempid-2)
-                                         :pull/id 2
-                                         :pull/str "2"}
-                        :pull/refs [{:db/id (eid tempid-3)}
-                                    {:db/id (eid tempid-4)}]}
-                       (<? (d/<pull (d/db conn) '[*] (eid tempid-1))))))
+                (is (= {:db/id (dbid tempid-1)
+                        :foo/id 1
+                        :foo/str "1"
+                        :foo/component {:db/id (dbid tempid-2)
+                                         :foo/id 2
+                                         :foo/str "2"}
+                        :foo/refs [{:db/id (dbid tempid-3)}
+                                    {:db/id (dbid tempid-4)}]}
+                       (<? (d/<pull (d/db conn) '[*] (dbid tempid-1))))))
               (testing "pull reverse attribute"
-                (is (= {:pull/_refs [{:pull/id 1 :db/id (eid tempid-1)}]}
-                       (<? (d/<pull (d/db conn) '[{:pull/_refs [:pull/id :db/id]}] (eid tempid-4))))))
+                (is (= {:foo/_refs [{:foo/id 1 :db/id (dbid tempid-1)}]}
+                       (<? (d/<pull (d/db conn) '[{:foo/_refs [:foo/id :db/id]}] (dbid tempid-4))))))
               (testing "pull with recursion"
-                (is (= {:pull/id 1 :pull/refs [{:pull/id 3} {:pull/id 4}]}
-                       (<? (d/<pull (d/db conn) '[:pull/id {:pull/refs ...}] (eid tempid-1))))))))
+                (is (= {:foo/id 1 :foo/refs [{:foo/id 3} {:foo/id 4}]}
+                       (<? (d/<pull (d/db conn) '[:foo/id {:foo/refs ...}] (dbid tempid-1))))))))
 
 (deftest-db test-pull-in-find-spec conn
             (let [attrs (<? (<initialize-with-schema conn save-schema))
