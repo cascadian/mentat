@@ -91,7 +91,18 @@
                        (<? (d/<pull (d/db conn) '[:foo/id {:foo/refs ...}] (dbid tempid-1))))))))
 
 (deftest-db test-pull-in-find-spec conn
-            (let [attrs (<? (<initialize-with-schema conn save-schema))
+            (let [attrs (<? (<initialize-with-schema conn
+                                                     (conj save-schema
+                                                           {:db/id (d/id-literal :db.part/user)
+                                                            :db.install/_attribute :db.part/db
+                                                            :db/cardinality :db.cardinality/one
+                                                            :db/valueType :db.type/ref
+                                                            :db/ident :save/ref }
+                                                           {:db/id (d/id-literal :db.part/user)
+                                                            :db.install/_attribute :db.part/db
+                                                            :db/cardinality :db.cardinality/one
+                                                            :db/valueType :db.type/long
+                                                            :db/ident :foo/bar})))
                   <q-one-with-find (fn [& args]
                                      (d/<q (d/db conn)
                                            `[:find ~@args
@@ -111,9 +122,12 @@
                                                     :where
                                                     ~'[?save :save/excerpt "NOT FOUND"]]))]
               (<? (d/<transact! conn
-                                [{:db/id        (d/id-literal :db.part/user -1)
+                                [{:db/id (d/id-literal :db.part/user -3)
+                                  :foo/bar 3}
+                                 {:db/id        (d/id-literal :db.part/user -1)
                                   :save/title   "Some page title"
-                                  :save/excerpt "Some page excerpt"}
+                                  :save/excerpt "Some page excerpt"
+                                  :save/ref (d/id-literal :db.part/user -3)}
                                  {:db/id        (d/id-literal :db.part/user -2)
                                   :save/title   "A different page"
                                   :save/excerpt "A different excerpt"}]))
@@ -144,5 +158,23 @@
                       result (<? (<q-one-with-find find-spec))
                       empty-result (<? (<q-with-find-no-results find-spec))]
                   (is (= nil empty-result))
-                  (is (= [{:save/title "Some page title"}] result))))))
+                  (is (= [{:save/title "Some page title"}] result))))
+              (testing "pull with pattern as input"
+                (let [result (<? (d/<q (d/db conn)
+                                       '[:find [(pull ?save ?p)]
+                                         :in $ ?p
+                                         :where
+                                         [?save :save/excerpt "Some page excerpt"]]
+                                       {:inputs {:p [:save/title :save/excerpt]}}))]
+                  (is (= [{:save/title "Some page title" :save/excerpt "Some page excerpt"}] result))))
+              (testing "multiple pulls"
+                (let [result (<? (d/<q (d/db conn)
+                                       '[:find [(pull ?save ?p1) (pull ?foo ?p2)]
+                                         :in $ ?p1 ?p2
+                                         :where
+                                         [?save :save/excerpt]
+                                         [?save :save/ref ?foo]]
+                                       {:inputs {:p1 [:save/title :save/excerpt]
+                                                 :p2 [:foo/bar]}}))]
+                  (is (= [{:save/title "Some page title" :save/excerpt "Some page excerpt"} {:foo/bar 3}] result))))))
 

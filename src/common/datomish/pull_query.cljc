@@ -15,21 +15,40 @@
     [datascript.parser :as dp
      #?@(:cljs [:refer
                 [FindRel FindColl FindTuple FindScalar
-                 Pull]])])
+                 Pull Variable Constant]])])
   #?(:clj
      (:import
        [datomish.datom Datom]
        [datascript.parser
         FindRel FindColl FindTuple FindScalar
-        Pull
-        ])))
+        Pull Variable Constant])))
+
 
 (defn pull-in-query
-  [db pull-fn {:keys [elements find-spec]} res-chan]
-  (if-let [pulls (seq (filter some? (map-indexed (fn [idx elem] (when (instance? Pull elem) [idx elem])) elements)))]
+  [db pull-fn {:keys [elements find-spec inputs]} res-chan]
+  (if-let [pulls (seq
+                   (filter
+                     some?
+                     (map-indexed
+                       (fn [idx elem]
+                         (when (instance? Pull elem)
+                           [idx (let [pattern (:pattern elem)
+                                      pattern-value
+                                      (cond
+                                        (instance? Variable pattern)
+                                        (get inputs (util/var->sql-var (:symbol pattern)))
+                                        (instance? Constant pattern)
+                                        (:value pattern)
+                                        :else (raise (str "Unkown pull element pattern " pattern)
+                                                     {:error :pull/bad-pattern
+                                                      :pull-element elem}))]
+                                  pattern-value)]))
+                       elements)))]
+
     (go-pair
       (let [res (<? res-chan)
-            <pull (fn [pull-elem eid] (pull-fn db (get-in pull-elem [:pattern :value]) eid))]
+            <pull (fn [pull-pattern eid]
+                    (pull-fn db pull-pattern eid))]
         (cond
           (nil? res) res
           (instance? FindScalar find-spec)

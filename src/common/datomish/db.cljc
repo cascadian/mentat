@@ -1043,4 +1043,4 @@
                       chan
                       (a/reduce (partial reduce-error-pair conj) [[] nil]
                                 chan))]
-       (pq/pull-in-query db pull-fn context res-chan)))))
+       (pq/pull-in-query db pull-fn (assoc context :inputs inputs) res-chan)))))
