@@ -312,9 +312,11 @@
     (<pull-pattern db (list (initial-frame pattern eids multi?)))))
 
 (defn <pull [db selector eid]
+  "pulls data for the specified entity id based on the specified selector"
   {:pre [(ddb/db? db)]}
   (<pull-spec db (dpp/parse-pull selector) [eid] false))
 
 (defn pull-many [db selector eids]
+  "pulls data for the specified entity ids based on the specified selector"
   {:pre [(ddb/db? db)]}
   (<pull-spec db (dpp/parse-pull selector) eids true))

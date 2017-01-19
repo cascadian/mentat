@@ -25,6 +25,8 @@
 
 
 (defn pull-in-query
+  "Takes the results from the query, evaluates the pull expressions,
+  and updates the results with the pulled data"
   [db pull-fn {:keys [elements find-spec inputs]} res-chan]
   (if-let [pulls (seq
                    (filter
