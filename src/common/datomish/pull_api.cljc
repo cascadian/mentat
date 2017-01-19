@@ -14,7 +14,7 @@
     [datascript.pull-parser :as dpp #?@(:cljs [:refer [PullSpec]])])
   #?(:clj
      (:import
-       [datascript.db Datom]
+       [datomish.datom Datom]
        [datascript.pull_parser PullSpec])))
 
 (defn- into!
